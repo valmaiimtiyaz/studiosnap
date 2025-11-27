@@ -6,12 +6,13 @@ const Navbar = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+
     if (storedUser && storedUser !== "undefined") {
       try {
         const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
+        setUser(parsedUser); 
       } catch (error) {
-        console.error("Corrupt user data found, clearing...", error);
+        console.error("Data user rusak, menghapus...", error);
         localStorage.removeItem("user");
       }
     }
@@ -46,7 +47,7 @@ const Navbar = () => {
             >
               Choose Layout
             </Link>
-            
+
             {user ? (
               <Link
                 to="/profile"
