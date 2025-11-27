@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"; 
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 const Navbar = () => {
@@ -18,9 +18,9 @@ const Navbar = () => {
 
   const handleLayoutClick = (e) => {
     if (!user) {
-      e.preventDefault(); 
-      alert("Eits! Kamu harus Login dulu untuk memilih layout.");
-      navigate("/login"); 
+      e.preventDefault();
+      alert("Oops! You need to log in first to choose a layout.");
+      navigate("/login");
     }
   };
 
@@ -49,7 +49,7 @@ const Navbar = () => {
 
             <Link
               to="/layout"
-              onClick={handleLayoutClick} 
+              onClick={handleLayoutClick}
               className="text-base font-bold text-[#610049] hover:opacity-50"
             >
               Choose Layout
@@ -70,7 +70,6 @@ const Navbar = () => {
                 Login
               </Link>
             )}
-            
           </div>
         </div>
       </nav>
