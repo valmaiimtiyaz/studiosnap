@@ -15,6 +15,7 @@ import Customize from "./pages/customize.jsx";
 import Login from "./pages/login.jsx";
 import Signup from "./pages/signup.jsx";
 import About from "./pages/about.jsx";
+import Profile from "./pages/profile.jsx";
 import Library from "./pages/library.jsx";
 
 const Home = () => {
@@ -52,6 +53,7 @@ const AppLayout = () => {
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </Layout>
   );
