@@ -8,17 +8,18 @@ import layout4 from "../assets/Layout4.svg";
 const Layout = () => {
   const [selectedLayout, setSelectedLayout] = useState(null);
   const navigate = useNavigate();
-  const userData = localStorage.getItem("user");
+  const user = localStorage.getItem("user");
 
   useEffect(() => {
-    if (!userData) {
-      navigate("/login", { replace: true }); 
+    if (!user || user === "undefined") {
+      navigate("/login", { replace: true });
     }
-  }, [userData, navigate]);
+  }, [user, navigate]);
 
-  if (!userData) {
-    return null;
+  if (!user || user === "undefined") {
+    return null; 
   }
+
   const handleLayoutClick = (id) => {
     setSelectedLayout(selectedLayout === id ? null : id);
   };
@@ -26,6 +27,7 @@ const Layout = () => {
   const handleContinue = () => {
     if (selectedLayout) {
       const layout = photoLayouts.find(l => l.id === selectedLayout);
+      
       localStorage.setItem("selectedLayoutId", selectedLayout);
       localStorage.setItem("totalShots", layout.photoCount.toString());
       localStorage.setItem("layoutConfig", JSON.stringify({
@@ -37,50 +39,35 @@ const Layout = () => {
       navigate("/cam");
     }
   };
+
   const photoLayouts = [
     { 
       id: "1", 
       image: layout1, 
       alt: "Layout 1 - 4 photos vertical",
       photoCount: 4,
-      gridConfig: {
-        columns: 1,
-        rows: 4,
-        aspectRatio: "3/4", 
-      }
+      gridConfig: { columns: 1, rows: 4, aspectRatio: "3/4" }
     },
     { 
       id: "2", 
       image: layout2, 
       alt: "Layout 2 - 3 photos vertical",
       photoCount: 3,
-      gridConfig: {
-        columns: 1,
-        rows: 3,
-        aspectRatio: "4/3",
-      }
+      gridConfig: { columns: 1, rows: 3, aspectRatio: "4/3" }
     },
     { 
       id: "3", 
       image: layout3, 
       alt: "Layout 3 - 4 photos grid",
       photoCount: 4,
-      gridConfig: {
-        columns: 2,
-        rows: 2,
-        aspectRatio: "1/1",
-      }
+      gridConfig: { columns: 2, rows: 2, aspectRatio: "1/1" }
     },
     { 
       id: "4", 
       image: layout4, 
       alt: "Layout 4 - 2 photos vertical",
       photoCount: 2,
-      gridConfig: {
-        columns: 1,
-        rows: 2,
-        aspectRatio: "3/4",
-      }
+      gridConfig: { columns: 1, rows: 2, aspectRatio: "3/4" }
     },
   ];
 
@@ -125,6 +112,7 @@ const Layout = () => {
           ))}
         </div>
       </div>
+
       {selectedLayout && (
         <p className="text-center text-[#610049] mt-6 font-medium">
           Selected: Layout {selectedLayout} ({photoLayouts.find(l => l.id === selectedLayout)?.photoCount} photos)
