@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; 
 import { useNavigate } from "react-router-dom";
 import layout1 from "../assets/Layout1.svg";
 import layout2 from "../assets/Layout2.svg";
@@ -8,6 +8,13 @@ import layout4 from "../assets/Layout4.svg";
 const Layout = () => {
   const [selectedLayout, setSelectedLayout] = useState(null);
   const navigate = useNavigate();
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (!userData) {
+      alert("Please Login first!");
+      navigate("/login");
+    }
+  }, [navigate]);
 
   const handleLayoutClick = (id) => {
     setSelectedLayout(selectedLayout === id ? null : id);
@@ -16,8 +23,6 @@ const Layout = () => {
   const handleContinue = () => {
     if (selectedLayout) {
       const layout = photoLayouts.find(l => l.id === selectedLayout);
-      
-      // Save layout info to localStorage
       localStorage.setItem("selectedLayoutId", selectedLayout);
       localStorage.setItem("totalShots", layout.photoCount.toString());
       localStorage.setItem("layoutConfig", JSON.stringify({
@@ -30,7 +35,6 @@ const Layout = () => {
     }
   };
 
-  // Define layouts with their photo count and grid configuration
   const photoLayouts = [
     { 
       id: "1", 
@@ -40,7 +44,7 @@ const Layout = () => {
       gridConfig: {
         columns: 1,
         rows: 4,
-        aspectRatio: "3/4", // Each photo aspect ratio
+        aspectRatio: "3/4", 
       }
     },
     { 
@@ -112,7 +116,6 @@ const Layout = () => {
                 alt={layout.alt}
                 className="w-full h-full object-cover"
               />
-              {/* Photo count badge */}
               <div className="absolute bottom-2 right-2 bg-[#610049] text-white text-xs font-bold px-2 py-1 rounded-full">
                 {layout.photoCount} photos
               </div>
@@ -121,7 +124,6 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* Selected layout info */}
       {selectedLayout && (
         <p className="text-center text-[#610049] mt-6 font-medium">
           Selected: Layout {selectedLayout} ({photoLayouts.find(l => l.id === selectedLayout)?.photoCount} photos)
