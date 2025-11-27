@@ -115,7 +115,7 @@ export default function CustomizeStrip() {
 
   return (
     <div className="min-h-screen pb-10">
-      <main className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-10 mt-10 px-4">
+      <main className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-10 mt-23 px-4">
         
         {/* Photo Strip Preview */}
         <div
@@ -162,7 +162,7 @@ export default function CustomizeStrip() {
                 <button
                   key={color}
                   onClick={() => setFrameColor(color)}
-                  className={`w-10 h-10 rounded-lg border-2 transition-transform hover:scale-110 ${
+                  className={`w-10 h-10 rounded-4xl border-2 transition-transform hover:scale-110 ${
                     frameColor === color 
                       ? "border-[#610049] ring-2 ring-[#610049] ring-offset-2" 
                       : "border-gray-300"
