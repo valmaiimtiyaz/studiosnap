@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = "https://studiosnap-backend.vercel.app";
+
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState(""); 
+  // const [username, setUsername] = useState(""); 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -25,9 +27,11 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("user", JSON.stringify(data.user)); 
+        localStorage.setItem("user", JSON.stringify(data.user));
+        
         alert("Login Successful!");
-        navigate("/welcome");
+        navigate("/layout"); 
+        
       } else {
         alert(
           data.message || "Login Failed. Please check your email and password."
