@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = "https://studiosnap-backend.vercel.app";
+
 const Signup = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false); 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -40,7 +42,7 @@ const Signup = () => {
       setLoading(false);
     }
   };
-
+  
   return (
     <>
       <div className="flex flex-col items-center justify-center min-h-screen z-10">
