@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; 
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import layout1 from "../assets/Layout1.svg";
 import layout2 from "../assets/Layout2.svg";
@@ -8,14 +8,17 @@ import layout4 from "../assets/Layout4.svg";
 const Layout = () => {
   const [selectedLayout, setSelectedLayout] = useState(null);
   const navigate = useNavigate();
-  useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (!userData) {
-      alert("Please Login first!");
-      navigate("/login");
-    }
-  }, [navigate]);
+  const userData = localStorage.getItem("user");
 
+  useEffect(() => {
+    if (!userData) {
+      navigate("/login", { replace: true }); 
+    }
+  }, [userData, navigate]);
+
+  if (!userData) {
+    return null;
+  }
   const handleLayoutClick = (id) => {
     setSelectedLayout(selectedLayout === id ? null : id);
   };
@@ -34,7 +37,6 @@ const Layout = () => {
       navigate("/cam");
     }
   };
-
   const photoLayouts = [
     { 
       id: "1", 
@@ -123,7 +125,6 @@ const Layout = () => {
           ))}
         </div>
       </div>
-
       {selectedLayout && (
         <p className="text-center text-[#610049] mt-6 font-medium">
           Selected: Layout {selectedLayout} ({photoLayouts.find(l => l.id === selectedLayout)?.photoCount} photos)
