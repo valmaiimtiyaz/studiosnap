@@ -1,6 +1,16 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const Navbar = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser)); 
+    }
+  }, []);
+
   return (
     <header className="pt-5">
       <nav className="mx-10">
@@ -30,12 +40,21 @@ const Navbar = () => {
             >
               Choose Layout
             </Link>
-            <Link
-              to="/login"
-              className="text-base font-bold text-[#610049] hover:opacity-50"
-            >
-              Login
-            </Link>
+            {user ? (
+              <Link
+                to="/profile" 
+                className="text-base font-bold text-[#610049] hover:opacity-50"
+              >
+                Profile
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="text-base font-bold text-[#610049] hover:opacity-50"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </nav>
