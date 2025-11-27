@@ -1,22 +1,28 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; 
 import { useState, useEffect } from "react";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-
     if (storedUser && storedUser !== "undefined") {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser); 
-      } catch (error) {
-        console.error("Data user rusak, menghapus...", error);
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
         localStorage.removeItem("user");
       }
     }
   }, []);
+
+  const handleLayoutClick = (e) => {
+    if (!user) {
+      e.preventDefault(); 
+      alert("Eits! Kamu harus Login dulu untuk memilih layout.");
+      navigate("/login"); 
+    }
+  };
 
   return (
     <header className="pt-5">
@@ -43,6 +49,7 @@ const Navbar = () => {
 
             <Link
               to="/layout"
+              onClick={handleLayoutClick} 
               className="text-base font-bold text-[#610049] hover:opacity-50"
             >
               Choose Layout
@@ -63,6 +70,7 @@ const Navbar = () => {
                 Login
               </Link>
             )}
+            
           </div>
         </div>
       </nav>
