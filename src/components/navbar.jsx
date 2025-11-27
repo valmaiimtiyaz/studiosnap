@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; 
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -40,6 +40,7 @@ const Navbar = () => {
             >
               Choose Layout
             </Link>
+
             {user ? (
               <Link
                 to="/profile" 
