@@ -1,13 +1,19 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react"; 
+import { useState, useEffect } from "react";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser)); 
+    if (storedUser && storedUser !== "undefined") {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error("Corrupt user data found, clearing...", error);
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 
@@ -40,10 +46,10 @@ const Navbar = () => {
             >
               Choose Layout
             </Link>
-
+            
             {user ? (
               <Link
-                to="/profile" 
+                to="/profile"
                 className="text-base font-bold text-[#610049] hover:opacity-50"
               >
                 Profile
