@@ -208,9 +208,8 @@ export default function CamPage() {
     }
 
     try {
-      const scale = 0.75;
-      canvas.width = video.videoWidth * scale;
-      canvas.height = video.videoHeight * scale;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
 
       const ctx = canvas.getContext("2d");
       ctx.filter = filterRef.current;
@@ -269,10 +268,10 @@ export default function CamPage() {
 
         {/* Photo Preview Panel */}
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-center mb-1">
+          <p className="text-sm font-semibold text-center mb-1 gap-2">
             Photos: {takenPhotos.length} / {totalShots}
           </p>
-          <div className="flex flex-col p-3 bg-white rounded-lg shadow-md border border-gray-200">
+          <div className="gap-2 flex flex-col p-3 bg-white rounded-lg shadow-md border border-gray-200">
             {Array.from({ length: totalShots }).map((_, i) => (
               <div
                 key={i}
@@ -304,7 +303,7 @@ export default function CamPage() {
         onClick={startPhotoSession}
         disabled={isCapturing || !isVideoReady}
         className={`
-          capture-button font-[Montserrat] mt-6 
+          capture-button font-[Montserrat] mt-3 
           bg-[#FCF9E9] text-[#610049] rounded-[50px] 
           px-[45px] py-[14px] text-[1.1rem] font-semibold 
           shadow-[0_2px_25px_#FFA3A3] transition-transform hover:scale-105
@@ -319,7 +318,7 @@ export default function CamPage() {
       </button>
 
       {/* Filter selection */}
-      <h3 className="filter-title text-[1.1rem] font-bold mt-[30px] mb-[15px]">
+      <h3 className="filter-title text-[1.1rem] font-bold">
         Choose a filter for your photos!
       </h3>
 
