@@ -24,14 +24,14 @@ export default function CustomizeStrip() {
     try {
       const lId = localStorage.getItem("selectedLayoutId");
       const photosJson = localStorage.getItem("takenPhotos");
-      
+
       if (!photosJson) {
         setLoading(false);
         return;
       }
 
       const parsed = JSON.parse(photosJson);
-      
+
       if (!Array.isArray(parsed) || parsed.length === 0) {
         setLoading(false);
         return;
@@ -40,38 +40,54 @@ export default function CustomizeStrip() {
       setLayoutId(lId);
       setPhotos(parsed);
       setLoading(false);
-      
     } catch (err) {
       console.error("Error loading photos:", err);
       setLoading(false);
     }
   }, []);
 
-  const layoutClass = () => {
+  const getLayoutConfig = () => {
     switch (layoutId) {
-      case "layout-1":
-        return "grid-rows-4";
-      case "layout-2":
-        return "grid-rows-3";
-      case "layout-3":
-        return "grid-rows-3";
-      case "layout-4":
-        return "grid-rows-3";
+      case "layout-1": // 4 photos, landscape orientation
+        return {
+          rows: 4,
+          photoHeight: 150,
+          gap: 8,
+          padding: 8,
+          border: 12,
+        };
+      case "layout-2": // 3 photos, landscape orientation
+        return {
+          rows: 3,
+          photoHeight: 170,
+          gap: 10,
+          padding: 15,
+          border: 18,
+        };
+      case "layout-3": // 4 photos, landscape orientation
+        return {
+          rows: 4,
+          photoHeight: 150,
+          gap: 8,
+          padding: 8,
+          border: 12,
+        };
+      case "layout-4": // 2 photos, portrait orientation
+        return {
+          rows: 2,
+          photoHeight: 200,
+          gap: 8,
+          padding: 8,
+          border: 14,
+        };
       default:
-        return "grid-rows-4";
-    }
-  };
-
-  const getStripHeight = () => {
-    switch (layoutId) {
-      case "layout-1":
-        return photos.length * 200;
-      case "layout-2":
-      case "layout-3":
-      case "layout-4":
-        return photos.length * 220;
-      default:
-        return photos.length * 200;
+        return {
+          rows: 4,
+          photoHeight: 150,
+          gap: 8,
+          padding: 8,
+          border: 12,
+        };
     }
   };
 
@@ -81,18 +97,17 @@ export default function CustomizeStrip() {
     try {
       // Dynamically import html2canvas
       const html2canvas = (await import("html2canvas")).default;
-      
+
       const canvas = await html2canvas(stripRef.current, {
         backgroundColor: frameColor,
         scale: 2, // Higher quality
         useCORS: true,
       });
-      
+
       const link = document.createElement("a");
       link.download = "studio-snap-photostrip.png";
       link.href = canvas.toDataURL("image/png");
       link.click();
-      
     } catch (error) {
       console.error("Download error:", error);
       alert("Failed to download. Please try again.");
@@ -113,18 +128,23 @@ export default function CustomizeStrip() {
     );
   }
 
+  const config = getLayoutConfig();
+
   return (
     <div className="min-h-screen pb-10">
       <main className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-10 mt-23 px-4">
-        
         {/* Photo Strip Preview */}
         <div
           ref={stripRef}
-          className={`border-[12px] shadow-lg p-3 w-[280px] grid gap-3 ${layoutClass()}`}
-          style={{ 
+          className="shadow-lg flex flex-col"
+          style={{
             backgroundColor: frameColor,
+            borderWidth: `${config.border}px`,
+            borderStyle: "solid",
             borderColor: frameColor,
-            height: `${getStripHeight()}px`
+            padding: `${config.padding}px`,
+            gap: `${config.gap}px`,
+            width: "320px",
           }}
         >
           {photos.length === 0 && (
@@ -138,12 +158,21 @@ export default function CustomizeStrip() {
           )}
 
           {photos.map((src, i) => (
-            <img
+            <div
               key={i}
-              src={src}
-              alt={`Captured photo ${i + 1}`}
-              className="w-full h-full object-cover object-top rounded-sm"
-            />
+              style={{
+                height: `${config.photoHeight}px`,
+                width: "100%",
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src={src}
+                alt={`Captured photo ${i + 1}`}
+                className="w-full h-full object-cover"
+                style={{ objectPosition: "center center" }}
+              />
+            </div>
           ))}
         </div>
 
@@ -156,15 +185,15 @@ export default function CustomizeStrip() {
           {/* Frame Color Selection */}
           <div className="flex flex-col gap-3">
             <label className="text-[#610049] font-semibold">Frame Color</label>
-            
+
             <div className="flex flex-wrap gap-2">
               {presetColors.map((color) => (
                 <button
                   key={color}
                   onClick={() => setFrameColor(color)}
                   className={`w-10 h-10 rounded-4xl border-2 transition-transform hover:scale-110 ${
-                    frameColor === color 
-                      ? "border-[#610049] ring-2 ring-[#610049] ring-offset-2" 
+                    frameColor === color
+                      ? "border-[#610049] ring-2 ring-[#610049] ring-offset-2"
                       : "border-gray-300"
                   }`}
                   style={{ backgroundColor: color }}
