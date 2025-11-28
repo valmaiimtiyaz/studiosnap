@@ -12,7 +12,7 @@ export default function CamPage() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [currentShot, setCurrentShot] = useState(0);
-  
+
   const [totalShots, setTotalShots] = useState(4);
   const [layoutId, setLayoutId] = useState(null);
   const [takenPhotos, setTakenPhotos] = useState([]);
@@ -28,7 +28,7 @@ export default function CamPage() {
   // Load layout config
   useEffect(() => {
     const configJson = localStorage.getItem("layoutConfig");
-    
+
     if (configJson) {
       try {
         const config = JSON.parse(configJson);
@@ -105,7 +105,7 @@ export default function CamPage() {
       const photoData = takeOnePhoto();
       if (photoData) {
         photosArrayRef.current.push(photoData);
-        setTakenPhotos(prev => [...prev, photoData]);
+        setTakenPhotos((prev) => [...prev, photoData]);
         console.log(`Shot ${shot} captured successfully`);
       } else {
         console.log(`Shot ${shot} failed`);
@@ -120,13 +120,15 @@ export default function CamPage() {
       }
     }
 
-    console.log(`Photo session complete. Captured ${photosArrayRef.current.length} photos`);
+    console.log(
+      `Photo session complete. Captured ${photosArrayRef.current.length} photos`
+    );
     await saveAndNavigate();
   }
 
   async function saveAndNavigate() {
     const photos = photosArrayRef.current;
-    
+
     if (photos.length === 0) {
       alert("No photos were captured. Please try again.");
       isCapturingRef.current = false;
@@ -137,15 +139,17 @@ export default function CamPage() {
     try {
       localStorage.removeItem("takenPhotos");
       localStorage.setItem("takenPhotos", JSON.stringify(photos));
-      
+
       console.log("Photos saved successfully, navigating...");
       await sleep(300);
       navigate("/customize");
-      
     } catch (error) {
       console.error("Save error:", error);
-      
-      if (error.name === "QuotaExceededError" || error.message?.includes("quota")) {
+
+      if (
+        error.name === "QuotaExceededError" ||
+        error.message?.includes("quota")
+      ) {
         await saveCompressed(photos);
       } else {
         alert("Failed to save photos: " + error.message);
@@ -158,15 +162,14 @@ export default function CamPage() {
   async function saveCompressed(photos) {
     try {
       const compressedPhotos = await Promise.all(
-        photos.map(dataUrl => compressImage(dataUrl))
+        photos.map((dataUrl) => compressImage(dataUrl))
       );
-      
+
       localStorage.removeItem("takenPhotos");
       localStorage.setItem("takenPhotos", JSON.stringify(compressedPhotos));
-      
+
       await sleep(300);
       navigate("/customize");
-      
     } catch (error) {
       alert("Photos are too large to save. Please try with fewer photos.");
       isCapturingRef.current = false;
@@ -214,15 +217,16 @@ export default function CamPage() {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
-      
+
       if (dataUrl && dataUrl.length > 100) {
-        console.log(`Photo captured, size: ${Math.round(dataUrl.length / 1024)}KB`);
+        console.log(
+          `Photo captured, size: ${Math.round(dataUrl.length / 1024)}KB`
+        );
         return dataUrl;
       }
-      
+
       console.error("Generated empty image");
       return null;
-      
     } catch (error) {
       console.error("Error in takeOnePhoto:", error);
       return null;
@@ -231,9 +235,8 @@ export default function CamPage() {
 
   return (
     <div className="cam w-full min-h-screen flex flex-col items-center px-[30px] py-[40px] text-[#610049]">
-
       {/* Layout info banner */}
-      <div className="bg-[#610049] text-white py-3 px-6 rounded-full">
+      <div className="bg-[#610049] text-white py-3 px-6 rounded-full mt-4">
         <span className="font-semibold">
           {layoutId ? `Layout ${layoutId} • ` : ""}
           Taking {totalShots} photo{totalShots !== 1 ? "s" : ""}
@@ -242,9 +245,8 @@ export default function CamPage() {
 
       {/* Camera and Preview Container */}
       <div className="flex flex-row items-center gap-5 ml-20">
-        
         {/* Camera */}
-        <div className="camera-container relative border-[3px] border-[#610049] rounded-[10px] overflow-hidden shadow-[0_2px_25px_#FFA3A3]">
+        <div className="camera-container relative border-[3px] border-[#610049] rounded-[10px] overflow-hidden shadow-[0_2px_25px_#FFA3A3] mt-6">
           <video
             ref={videoRef}
             autoPlay
@@ -255,9 +257,11 @@ export default function CamPage() {
           />
 
           {countdown !== null && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
                             text-[80px] font-extrabold text-white 
-                            drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+                            drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
+            >
               {countdown}
             </div>
           )}
@@ -273,8 +277,8 @@ export default function CamPage() {
               <div
                 key={i}
                 className={`w-[120px] h-[90px] rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-                  takenPhotos[i] 
-                    ? "border-[#610049] shadow-md" 
+                  takenPhotos[i]
+                    ? "border-[#610049] shadow-md"
                     : "border-dashed border-gray-300 bg-gray-50"
                 }`}
               >
@@ -304,14 +308,14 @@ export default function CamPage() {
           bg-[#FCF9E9] text-[#610049] rounded-[50px] 
           px-[45px] py-[14px] text-[1.1rem] font-semibold 
           shadow-[0_2px_25px_#FFA3A3] transition-transform hover:scale-105
-          ${(!isVideoReady || isCapturing) ? 'opacity-50 cursor-not-allowed' : ''}
+          ${!isVideoReady || isCapturing ? "opacity-50 cursor-not-allowed" : ""}
         `}
       >
         {!isVideoReady
           ? "Loading camera..."
           : isCapturing
-            ? `Shooting ${currentShot} / ${totalShots}`
-            : "Start Capture"}
+          ? `Shooting ${currentShot} / ${totalShots}`
+          : "Start Capture"}
       </button>
 
       {/* Filter selection */}
@@ -335,7 +339,8 @@ export default function CamPage() {
             onClick={() => !isCapturing && setFilter(f.value)}
             disabled={isCapturing}
             className={`filter-option border-2 border-white rounded-[50px] px-[18px] py-[8px] mx-[5px] font-semibold transition 
-              ${filter === f.value
+              ${
+                filter === f.value
                   ? "bg-white text-[#610049]"
                   : "bg-transparent text-white hover:bg-white hover:text-[#610049]"
               }
