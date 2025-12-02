@@ -16,6 +16,7 @@ export default function CamPage() {
   const [takenPhotos, setTakenPhotos] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const currentUserId = "1";
+
   const photosArrayRef = useRef([]);
   const isCapturingRef = useRef(false);
   const filterRef = useRef(filter);
@@ -28,6 +29,7 @@ export default function CamPage() {
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  // Load layout config
   useEffect(() => {
     const configJson = localStorage.getItem("layoutConfig");
     if (configJson) {
@@ -87,6 +89,7 @@ export default function CamPage() {
 
   async function startPhotoSession() {
     if (isCapturingRef.current || !isVideoReady) return;
+
     try {
       const response = await axios.post(`${API_BASE_URL}/api/start-session`, {
         user_id: currentUserId,
@@ -123,10 +126,10 @@ export default function CamPage() {
       if (shot < totalShots) await sleep(1500);
     }
 
-    await uploadPhotosAndNavigate();
+    await finishSessionAndNavigate();
   }
 
-  async function uploadPhotosAndNavigate() {
+  async function finishSessionAndNavigate() {
     const photos = photosArrayRef.current;
 
     if (photos.length === 0) {
@@ -137,16 +140,6 @@ export default function CamPage() {
     }
 
     if (activeSessionId) {
-      for (const photoDataUrl of photos) {
-        try {
-          await axios.post(`${API_BASE_URL}/api/upload-photo`, {
-            session_id: activeSessionId,
-            photo_data: photoDataUrl,
-          });
-        } catch (error) {
-          console.error("Upload failed (skip):", error);
-        }
-      }
       await handleEndSession(activeSessionId);
     }
 
@@ -155,34 +148,19 @@ export default function CamPage() {
       await sleep(300);
       navigate("/customize");
     } catch (error) {
-      if (
-        error.name === "QuotaExceededError" ||
-        error.message?.includes("quota")
-      ) {
-        await saveCompressed(photos);
-      } else {
-        alert("Warning: Local storage issue, but moving to customize.");
+      try {
+        const compressed = await Promise.all(
+          photos.map((p) => compressImage(p))
+        );
+        localStorage.setItem("takenPhotos", JSON.stringify(compressed));
         navigate("/customize");
+      } catch (e) {
+        alert("Storage full. Please clear browser cache.");
       }
     }
 
     isCapturingRef.current = false;
     setIsCapturing(false);
-  }
-
-  async function saveCompressed(photos) {
-    try {
-      const compressedPhotos = await Promise.all(
-        photos.map((dataUrl) => compressImage(dataUrl))
-      );
-      localStorage.setItem("takenPhotos", JSON.stringify(compressedPhotos));
-      await sleep(300);
-      navigate("/customize");
-    } catch (error) {
-      alert("Photos are too large to save. Please try with fewer photos.");
-      isCapturingRef.current = false;
-      setIsCapturing(false);
-    }
   }
 
   function compressImage(dataUrl) {
@@ -212,6 +190,7 @@ export default function CamPage() {
       const ctx = canvas.getContext("2d");
       ctx.filter = filterRef.current;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Kualitas 0.7 biar enteng
       return canvas.toDataURL("image/jpeg", 0.7);
     } catch (error) {
       return null;
