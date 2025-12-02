@@ -15,10 +15,12 @@ export default function CamPage() {
   const [layoutId, setLayoutId] = useState(null);
   const [takenPhotos, setTakenPhotos] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
-  const currentUserId = "1"; 
+  const currentUserId = "1";
   const photosArrayRef = useRef([]);
   const isCapturingRef = useRef(false);
   const filterRef = useRef(filter);
+
+  const API_BASE_URL = "https://studiosnap-backend.vercel.app";
 
   useEffect(() => {
     filterRef.current = filter;
@@ -48,7 +50,9 @@ export default function CamPage() {
   async function handleEndSession(sessionId) {
     if (!sessionId) return;
     try {
-      await axios.post("/api/end-session", { session_id: sessionId });
+      await axios.post(`${API_BASE_URL}/api/end-session`, {
+        session_id: sessionId,
+      });
       setActiveSessionId(null);
     } catch (error) {
       console.error("Failed to end session on server:", error);
@@ -93,7 +97,7 @@ export default function CamPage() {
     }
 
     try {
-      const response = await axios.post("/api/start-session", {
+      const response = await axios.post(`${API_BASE_URL}/api/start-session`, {
         user_id: currentUserId,
         filter: filter,
       });
@@ -105,7 +109,10 @@ export default function CamPage() {
       }
       setActiveSessionId(response.data.data.session_id);
     } catch (error) {
-      alert("Failed to start session on the server. Please try again.");
+      alert(
+        "Failed to start session on the server. Please check your backend URL."
+      );
+      console.error("Start Session Error:", error);
       return;
     }
 
@@ -153,7 +160,7 @@ export default function CamPage() {
 
     for (const photoDataUrl of photos) {
       try {
-        await axios.post("/api/upload-photo", {
+        await axios.post(`${API_BASE_URL}/api/upload-photo`, {
           session_id: activeSessionId,
           photo_data: photoDataUrl,
         });
@@ -285,8 +292,8 @@ export default function CamPage() {
           {countdown !== null && (
             <div
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                                         text-[80px] font-extrabold text-white 
-                                         drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
+                                               text-[80px] font-extrabold text-white 
+                                               drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
             >
               {countdown}
             </div>
@@ -349,7 +356,7 @@ export default function CamPage() {
       </button>
 
       {/* Filter selection */}
-      <h3 className="filter-title text-[1.1rem] font-bold">
+      <h3 className="filter-title text-[1.1rem] font-bold mt-7">
         Choose a filter for your photos!
       </h3>
 
