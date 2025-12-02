@@ -24,43 +24,37 @@ export default function CamPage() {
     filterRef.current = filter;
   }, [filter]);
 
-  // Load layout config 
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  // Load layout config
   useEffect(() => {
     const configJson = localStorage.getItem("layoutConfig");
 
     if (configJson) {
       try {
         const config = JSON.parse(configJson);
-        console.log("Loaded layout config:", config);
         setTotalShots(config.photoCount);
         setLayoutId(config.id);
       } catch (e) {
-        console.error("Failed to parse layout config:", e);
         const shots = parseInt(localStorage.getItem("totalShots")) || 4;
         setTotalShots(shots);
       }
     } else {
       const shots = parseInt(localStorage.getItem("totalShots")) || 4;
-      console.log("No layout config found, using fallback:", shots);
       setTotalShots(shots);
     }
   }, []);
 
-  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-  //handle Session End (for cleanup)
   async function handleEndSession(sessionId) {
     if (!sessionId) return;
     try {
       await axios.post("/api/end-session", { session_id: sessionId });
-      console.log(`Session ${sessionId} ended successfully on server.`);
       setActiveSessionId(null);
     } catch (error) {
       console.error("Failed to end session on server:", error);
     }
   }
 
-  //Start Camera & Cleanup Logic
   useEffect(() => {
     async function startCamera() {
       try {
@@ -77,7 +71,6 @@ export default function CamPage() {
           };
         }
       } catch (err) {
-        console.error("Error accessing camera:", err);
         alert("Camera access denied. Please allow camera permission.");
       }
     }
@@ -88,21 +81,17 @@ export default function CamPage() {
       if (videoRef.current?.srcObject) {
         videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
       }
-      // End session cleanup
       if (activeSessionId) {
         handleEndSession(activeSessionId);
       }
     };
   }, [activeSessionId]);
 
-  //Start Photo Session
   async function startPhotoSession() {
     if (isCapturingRef.current || !isVideoReady) {
-      console.log("Cannot start: already capturing or video not ready");
       return;
     }
 
-    // 1. START SESSION API CALL
     try {
       const response = await axios.post("/api/start-session", {
         user_id: currentUserId,
@@ -115,37 +104,27 @@ export default function CamPage() {
         );
       }
       setActiveSessionId(response.data.data.session_id);
-      console.log("Session started on server:", response.data.data.session_id);
     } catch (error) {
-      console.error("Error starting session:", error);
       alert("Failed to start session on the server. Please try again.");
       return;
     }
 
-    console.log(`Starting photo session with ${totalShots} shots...`);
     isCapturingRef.current = true;
     setIsCapturing(true);
     photosArrayRef.current = [];
     setTakenPhotos([]);
 
     for (let shot = 1; shot <= totalShots; shot++) {
-      console.log(`Starting shot ${shot} of ${totalShots}`);
       setCurrentShot(shot);
-
-      // Countdown
       for (let i = 3; i >= 1; i--) {
         setCountdown(i);
         await sleep(1000);
       }
 
-      // Take photo and update preview
       const photoData = takeOnePhoto();
       if (photoData) {
         photosArrayRef.current.push(photoData);
         setTakenPhotos((prev) => [...prev, photoData]);
-        console.log(`Shot ${shot} captured successfully`);
-      } else {
-        console.log(`Shot ${shot} failed`);
       }
 
       setCountdown("📸");
@@ -157,9 +136,6 @@ export default function CamPage() {
       }
     }
 
-    console.log(
-      `Photo session complete. Captured ${photosArrayRef.current.length} photos`
-    );
     await uploadPhotosAndNavigate();
   }
 
@@ -175,13 +151,11 @@ export default function CamPage() {
 
     let isUploadSuccessful = true;
 
-    // 1. UPLOAD EACH PHOTO ASSET TO BACKEND
-    console.log("Uploading photos to server...");
     for (const photoDataUrl of photos) {
       try {
         await axios.post("/api/upload-photo", {
           session_id: activeSessionId,
-          photo_data: photoDataUrl, 
+          photo_data: photoDataUrl,
         });
       } catch (error) {
         console.error("Failed to upload photo:", error);
@@ -189,10 +163,8 @@ export default function CamPage() {
       }
     }
 
-    // 2. END SESSION ON BACKEND
     await handleEndSession(activeSessionId);
 
-    // 3. SAVE LOCALLY 
     try {
       if (!isUploadSuccessful) {
         console.warn(
@@ -203,12 +175,9 @@ export default function CamPage() {
       localStorage.removeItem("takenPhotos");
       localStorage.setItem("takenPhotos", JSON.stringify(photos));
 
-      console.log("Local save successful, navigating...");
       await sleep(300);
       navigate("/customize");
     } catch (error) {
-      // 4. Handle Quota/Storage Errors
-      console.error("Local Save error:", error);
       if (
         error.name === "QuotaExceededError" ||
         error.message?.includes("quota")
@@ -225,7 +194,6 @@ export default function CamPage() {
     setIsCapturing(false);
   }
 
-  // saveCompressed 
   async function saveCompressed(photos) {
     try {
       const compressedPhotos = await Promise.all(
@@ -244,7 +212,6 @@ export default function CamPage() {
     }
   }
 
-  // compressImage 
   function compressImage(dataUrl) {
     return new Promise((resolve) => {
       const img = new Image();
@@ -261,18 +228,15 @@ export default function CamPage() {
     });
   }
 
-  // takeOnePhoto 
   function takeOnePhoto() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
     if (!video || !canvas) {
-      console.error("Video or canvas not available");
       return null;
     }
 
     if (video.readyState < 2) {
-      console.error("Video not ready, readyState:", video.readyState);
       return null;
     }
 
@@ -287,16 +251,10 @@ export default function CamPage() {
       const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
       if (dataUrl && dataUrl.length > 100) {
-        console.log(
-          `Photo captured, size: ${Math.round(dataUrl.length / 1024)}KB`
-        );
         return dataUrl;
       }
-
-      console.error("Generated empty image");
       return null;
     } catch (error) {
-      console.error("Error in takeOnePhoto:", error);
       return null;
     }
   }
