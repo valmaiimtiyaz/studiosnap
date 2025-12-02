@@ -6,6 +6,7 @@ export default function CamPage() {
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+
   const [filter, setFilter] = useState("none");
   const [countdown, setCountdown] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -15,6 +16,7 @@ export default function CamPage() {
   const [layoutId, setLayoutId] = useState(null);
   const [takenPhotos, setTakenPhotos] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
+
   const currentUserId = "1";
   const photosArrayRef = useRef([]);
   const isCapturingRef = useRef(false);
@@ -31,7 +33,6 @@ export default function CamPage() {
   // Load layout config
   useEffect(() => {
     const configJson = localStorage.getItem("layoutConfig");
-
     if (configJson) {
       try {
         const config = JSON.parse(configJson);
@@ -292,8 +293,8 @@ export default function CamPage() {
           {countdown !== null && (
             <div
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                                               text-[80px] font-extrabold text-white 
-                                               drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
+                           text-[80px] font-extrabold text-white 
+                           drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
             >
               {countdown}
             </div>
@@ -337,16 +338,14 @@ export default function CamPage() {
         onClick={startPhotoSession}
         disabled={isCapturing || !isVideoReady}
         className={`
-                    capture-button font-[Montserrat] mt-3 
-                    bg-[#FCF9E9] text-[#610049] rounded-[50px] 
-                    px-[45px] py-[14px] text-[1.1rem] font-semibold 
-                    shadow-[0_2px_25px_#FFA3A3] transition-transform hover:scale-105
-                    ${
-                      !isVideoReady || isCapturing
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                    }
-                `}
+           capture-button font-[Montserrat] mt-3 
+           bg-[#FCF9E9] text-[#610049] rounded-[50px] 
+           px-[45px] py-[14px] text-[1.1rem] font-semibold 
+           shadow-[0_2px_25px_#FFA3A3] transition-transform hover:scale-105
+           ${
+             !isVideoReady || isCapturing ? "opacity-50 cursor-not-allowed" : ""
+           }
+        `}
       >
         {!isVideoReady
           ? "Loading camera..."
@@ -356,7 +355,7 @@ export default function CamPage() {
       </button>
 
       {/* Filter selection */}
-      <h3 className="filter-title text-[1.1rem] font-bold mt-7">
+      <h3 className="filter-title text-[1.1rem] font-bold mt-8">
         Choose a filter for your photos!
       </h3>
 
@@ -376,15 +375,13 @@ export default function CamPage() {
             onClick={() => !isCapturing && setFilter(f.value)}
             disabled={isCapturing}
             className={`filter-option border-2 border-white rounded-[50px] px-[18px] py-[8px] mx-[5px] font-semibold transition 
-                            ${
-                              filter === f.value
-                                ? "bg-white text-[#610049]"
-                                : "bg-transparent text-white hover:bg-white hover:text-[#610049]"
-                            }
-                            ${
-                              isCapturing ? "opacity-50 cursor-not-allowed" : ""
-                            }
-                        `}
+               ${
+                 filter === f.value
+                   ? "bg-white text-[#610049]"
+                   : "bg-transparent text-white hover:bg-white hover:text-[#610049]"
+               }
+               ${isCapturing ? "opacity-50 cursor-not-allowed" : ""}
+            `}
           >
             {f.name}
           </button>
