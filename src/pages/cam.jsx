@@ -6,7 +6,6 @@ export default function CamPage() {
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-
   const [filter, setFilter] = useState("none");
   const [countdown, setCountdown] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -16,8 +15,8 @@ export default function CamPage() {
   const [layoutId, setLayoutId] = useState(null);
   const [takenPhotos, setTakenPhotos] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
-
   const currentUserId = "1";
+
   const photosArrayRef = useRef([]);
   const isCapturingRef = useRef(false);
   const filterRef = useRef(filter);
@@ -39,12 +38,10 @@ export default function CamPage() {
         setTotalShots(config.photoCount);
         setLayoutId(config.id);
       } catch (e) {
-        const shots = parseInt(localStorage.getItem("totalShots")) || 4;
-        setTotalShots(shots);
+        setTotalShots(4);
       }
     } else {
-      const shots = parseInt(localStorage.getItem("totalShots")) || 4;
-      setTotalShots(shots);
+      setTotalShots(4);
     }
   }, []);
 
@@ -79,9 +76,7 @@ export default function CamPage() {
         alert("Camera access denied. Please allow camera permission.");
       }
     }
-
     startCamera();
-
     return () => {
       if (videoRef.current?.srcObject) {
         videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
@@ -93,26 +88,23 @@ export default function CamPage() {
   }, [activeSessionId]);
 
   async function startPhotoSession() {
-    if (isCapturingRef.current || !isVideoReady) {
-      return;
-    }
+    if (isCapturingRef.current || !isVideoReady) return;
 
     try {
+      console.log("Connecting to:", `${API_BASE_URL}/api/start-session`);
+
       const response = await axios.post(`${API_BASE_URL}/api/start-session`, {
         user_id: currentUserId,
         filter: filter,
       });
 
       if (response.data.status !== "success") {
-        throw new Error(
-          response.data.message || "Failed to start session on server."
-        );
+        throw new Error(response.data.message || "Failed to start session.");
       }
       setActiveSessionId(response.data.data.session_id);
+      console.log("Session ID:", response.data.data.session_id);
     } catch (error) {
-      alert(
-        "Failed to start session on the server. Please check your backend URL."
-      );
+      alert(`Gagal konek ke Backend: ${error.message}`);
       console.error("Start Session Error:", error);
       return;
     }
@@ -134,14 +126,10 @@ export default function CamPage() {
         photosArrayRef.current.push(photoData);
         setTakenPhotos((prev) => [...prev, photoData]);
       }
-
       setCountdown("📸");
       await sleep(800);
       setCountdown(null);
-
-      if (shot < totalShots) {
-        await sleep(1500);
-      }
+      if (shot < totalShots) await sleep(1500);
     }
 
     await uploadPhotosAndNavigate();
@@ -149,9 +137,8 @@ export default function CamPage() {
 
   async function uploadPhotosAndNavigate() {
     const photos = photosArrayRef.current;
-
     if (photos.length === 0 || !activeSessionId) {
-      alert("No photos were captured or session ID is missing.");
+      alert("No photos captured.");
       isCapturingRef.current = false;
       setIsCapturing(false);
       return;
@@ -166,7 +153,7 @@ export default function CamPage() {
           photo_data: photoDataUrl,
         });
       } catch (error) {
-        console.error("Failed to upload photo:", error);
+        console.error("Upload failed:", error);
         isUploadSuccessful = false;
       }
     }
@@ -174,50 +161,24 @@ export default function CamPage() {
     await handleEndSession(activeSessionId);
 
     try {
-      if (!isUploadSuccessful) {
-        console.warn(
-          "Some photos failed to upload to the server. Local save proceeding."
-        );
-      }
-
-      localStorage.removeItem("takenPhotos");
+      if (!isUploadSuccessful)
+        console.warn("Upload incomplete, saving locally.");
       localStorage.setItem("takenPhotos", JSON.stringify(photos));
-
       await sleep(300);
       navigate("/customize");
     } catch (error) {
-      if (
-        error.name === "QuotaExceededError" ||
-        error.message?.includes("quota")
-      ) {
-        await saveCompressed(photos);
-      } else {
-        alert("Failed to save photos locally: " + error.message);
-        isCapturingRef.current = false;
-        setIsCapturing(false);
+      try {
+        const compressedPhotos = await Promise.all(
+          photos.map((p) => compressImage(p))
+        );
+        localStorage.setItem("takenPhotos", JSON.stringify(compressedPhotos));
+        navigate("/customize");
+      } catch (e) {
+        alert("Storage full.");
       }
     }
-
     isCapturingRef.current = false;
     setIsCapturing(false);
-  }
-
-  async function saveCompressed(photos) {
-    try {
-      const compressedPhotos = await Promise.all(
-        photos.map((dataUrl) => compressImage(dataUrl))
-      );
-
-      localStorage.removeItem("takenPhotos");
-      localStorage.setItem("takenPhotos", JSON.stringify(compressedPhotos));
-
-      await sleep(300);
-      navigate("/customize");
-    } catch (error) {
-      alert("Photos are too large to save. Please try with fewer photos.");
-      isCapturingRef.current = false;
-      setIsCapturing(false);
-    }
   }
 
   function compressImage(dataUrl) {
@@ -239,29 +200,15 @@ export default function CamPage() {
   function takeOnePhoto() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-
-    if (!video || !canvas) {
-      return null;
-    }
-
-    if (video.readyState < 2) {
-      return null;
-    }
+    if (!video || video.readyState < 2) return null;
 
     try {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-
       const ctx = canvas.getContext("2d");
       ctx.filter = filterRef.current;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
-
-      if (dataUrl && dataUrl.length > 100) {
-        return dataUrl;
-      }
-      return null;
+      return canvas.toDataURL("image/jpeg", 0.8);
     } catch (error) {
       return null;
     }
