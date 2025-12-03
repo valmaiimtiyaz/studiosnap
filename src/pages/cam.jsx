@@ -6,6 +6,7 @@ export default function CamPage() {
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const [dbFilters, setDbFilters] = useState([]);
   const [filter, setFilter] = useState("none");
   const [countdown, setCountdown] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -16,7 +17,6 @@ export default function CamPage() {
   const [takenPhotos, setTakenPhotos] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const currentUserId = "1";
-
   const photosArrayRef = useRef([]);
   const isCapturingRef = useRef(false);
   const filterRef = useRef(filter);
@@ -29,7 +29,40 @@ export default function CamPage() {
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  // Load layout config
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/filters`);
+        if (
+          response.data.status === "success" &&
+          response.data.data.length > 0
+        ) {
+          const mappedFilters = response.data.data.map((f) => ({
+            name: f.name,
+            value: f.css_value,
+          }));
+          setDbFilters(mappedFilters);
+        } else {
+          useDefaultFilters();
+        }
+      } catch (error) {
+        console.warn("Using default filters (Offline/DB Error).");
+        useDefaultFilters();
+      }
+    };
+
+    fetchFilters();
+  }, []);
+
+  const useDefaultFilters = () => {
+    setDbFilters([
+      { name: "No Filter", value: "none" },
+      { name: "B&W", value: "grayscale(100%) contrast(130%)" },
+      { name: "Sepia", value: "sepia(100%)" },
+      { name: "Vintage", value: "sepia(60%) contrast(110%)" },
+    ]);
+  };
+
   useEffect(() => {
     const configJson = localStorage.getItem("layoutConfig");
     if (configJson) {
@@ -48,9 +81,7 @@ export default function CamPage() {
   async function handleEndSession(sessionId) {
     if (!sessionId) return;
     try {
-      await axios.post(`${API_BASE_URL}/api/end-session`, {
-        session_id: sessionId,
-      });
+      axios.post(`${API_BASE_URL}/api/end-session`, { session_id: sessionId });
       setActiveSessionId(null);
     } catch (error) {
       console.error("Failed to end session on server:", error);
@@ -100,7 +131,7 @@ export default function CamPage() {
         setActiveSessionId(response.data.data.session_id);
       }
     } catch (error) {
-      console.warn("Offline mode: Failed to start session on server.", error);
+      console.warn("Offline mode: Failed to start session on server.");
     }
 
     isCapturingRef.current = true;
@@ -126,10 +157,10 @@ export default function CamPage() {
       if (shot < totalShots) await sleep(1500);
     }
 
-    await finishSessionAndNavigate();
+    await uploadPhotosAndNavigate();
   }
 
-  async function finishSessionAndNavigate() {
+  async function uploadPhotosAndNavigate() {
     const photos = photosArrayRef.current;
 
     if (photos.length === 0) {
@@ -139,25 +170,39 @@ export default function CamPage() {
       return;
     }
 
-    if (activeSessionId) {
-      await handleEndSession(activeSessionId);
-    }
-
     try {
       localStorage.setItem("takenPhotos", JSON.stringify(photos));
-      await sleep(300);
-      navigate("/customize");
     } catch (error) {
       try {
         const compressed = await Promise.all(
           photos.map((p) => compressImage(p))
         );
         localStorage.setItem("takenPhotos", JSON.stringify(compressed));
-        navigate("/customize");
       } catch (e) {
-        alert("Storage full. Please clear browser cache.");
+        console.error("Storage full");
       }
     }
+
+    if (activeSessionId) {
+      try {
+        const uploadPromises = photos.map((photoDataUrl) =>
+          axios.post(`${API_BASE_URL}/api/upload-photo`, {
+            session_id: activeSessionId,
+            photo_data: photoDataUrl,
+          })
+        );
+        await Promise.race([
+          Promise.all(uploadPromises),
+          new Promise((resolve) => setTimeout(resolve, 2000)),
+        ]);
+        await handleEndSession(activeSessionId);
+      } catch (error) {
+        console.error("Upload skipped:", error);
+      }
+    }
+
+    await sleep(300);
+    navigate("/customize");
 
     isCapturingRef.current = false;
     setIsCapturing(false);
@@ -190,7 +235,6 @@ export default function CamPage() {
       const ctx = canvas.getContext("2d");
       ctx.filter = filterRef.current;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      // Kualitas 0.7 biar enteng
       return canvas.toDataURL("image/jpeg", 0.7);
     } catch (error) {
       return null;
@@ -223,8 +267,8 @@ export default function CamPage() {
           {countdown !== null && (
             <div
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                           text-[80px] font-extrabold text-white 
-                           drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
+                            text-[80px] font-extrabold text-white 
+                            drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
             >
               {countdown}
             </div>
@@ -268,13 +312,11 @@ export default function CamPage() {
         onClick={startPhotoSession}
         disabled={isCapturing || !isVideoReady}
         className={`
-           capture-button font-[Montserrat] mt-3 
-           bg-[#FCF9E9] text-[#610049] rounded-[50px] 
-           px-[45px] py-[14px] text-[1.1rem] font-semibold 
-           shadow-[0_2px_25px_#FFA3A3] transition-transform hover:scale-105
-           ${
-             !isVideoReady || isCapturing ? "opacity-50 cursor-not-allowed" : ""
-           }
+          capture-button font-[Montserrat] mt-3 
+          bg-[#FCF9E9] text-[#610049] rounded-[50px] 
+          px-[45px] py-[14px] text-[1.1rem] font-semibold 
+          shadow-[0_2px_25px_#FFA3A3] transition-transform hover:scale-105
+          ${!isVideoReady || isCapturing ? "opacity-50 cursor-not-allowed" : ""}
         `}
       >
         {!isVideoReady
@@ -285,7 +327,7 @@ export default function CamPage() {
       </button>
 
       {/* Filter selection */}
-      <h3 className="filter-title text-[1.1rem] font-bold mt-8">
+      <h3 className="filter-title text-[1.1rem] font-bold">
         Choose a filter for your photos!
       </h3>
 
@@ -294,28 +336,27 @@ export default function CamPage() {
           Filter
         </span>
 
-        {[
-          { name: "No Filter", value: "none" },
-          { name: "B&W", value: "grayscale(100%) contrast(130%)" },
-          { name: "Sepia", value: "sepia(100%)" },
-          { name: "Vintage", value: "sepia(60%) contrast(110%)" },
-        ].map((f) => (
-          <button
-            key={f.name}
-            onClick={() => !isCapturing && setFilter(f.value)}
-            disabled={isCapturing}
-            className={`filter-option border-2 border-white rounded-[50px] px-[18px] py-[8px] mx-[5px] font-semibold transition 
-               ${
-                 filter === f.value
-                   ? "bg-white text-[#610049]"
-                   : "bg-transparent text-white hover:bg-white hover:text-[#610049]"
-               }
-               ${isCapturing ? "opacity-50 cursor-not-allowed" : ""}
-            `}
-          >
-            {f.name}
-          </button>
-        ))}
+        {dbFilters.length > 0 ? (
+          dbFilters.map((f, index) => (
+            <button
+              key={index}
+              onClick={() => !isCapturing && setFilter(f.value)}
+              disabled={isCapturing}
+              className={`filter-option border-2 border-white rounded-[50px] px-[18px] py-[8px] mx-[5px] font-semibold transition 
+                ${
+                  filter === f.value
+                    ? "bg-white text-[#610049]"
+                    : "bg-transparent text-white hover:bg-white hover:text-[#610049]"
+                }
+                ${isCapturing ? "opacity-50 cursor-not-allowed" : ""}
+              `}
+            >
+              {f.name}
+            </button>
+          ))
+        ) : (
+          <span className="text-white px-4">Loading filters...</span>
+        )}
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
