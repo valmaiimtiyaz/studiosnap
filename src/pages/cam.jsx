@@ -327,7 +327,7 @@ export default function CamPage() {
       </button>
 
       {/* Filter selection */}
-      <h3 className="filter-title text-[1.1rem] font-bold">
+      <h3 className="filter-title text-[1.1rem] font-bold mt-5 mb-5">
         Choose a filter for your photos!
       </h3>
 
