@@ -8,14 +8,12 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); 
 
     try {
-      const response = await fetch(`${API_URL}/api/login`, {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,23 +24,21 @@ const Login = () => {
         }),
       });
 
-      const data = await response.json().catch(() => null);
+      const data = await response.json();
 
-      if (response.ok && data) {
-        localStorage.setItem("user", JSON.stringify(data.data));
-
+      if (response.ok) {
+        localStorage.setItem("user", JSON.stringify(data.data)); 
+        
         alert("Login Successful!");
-        navigate("/layout");
+        navigate("/layout"); 
       } else {
         alert(
-          data?.message || "Login Failed. Please check your email and password."
+          data.message || "Login Failed. Please check your email and password."
         );
       }
     } catch (error) {
       console.error("Error:", error);
       alert("Connection error. Please try again later.");
-    } finally {
-      setIsLoading(false); 
     }
   };
 
@@ -85,15 +81,9 @@ const Login = () => {
 
             <button
               type="submit"
-              disabled={isLoading}
-              className={`w-full text-white py-2 rounded-lg transition-colors duration-200 
-                ${
-                  isLoading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-[#610049] hover:bg-[#4a003a]"
-                }`}
+              className="w-full bg-[#610049] text-white py-2 rounded-lg hover:bg-[#4a003a] transition-colors duration-200"
             >
-              {isLoading ? "Logging in..." : "Login"}
+              Login
             </button>
           </form>
 
