@@ -16,7 +16,16 @@ import Login from "./pages/login.jsx";
 import Signup from "./pages/signup.jsx";
 import About from "./pages/about.jsx";
 import Profile from "./pages/profile.jsx";
-import Library from "./pages/library.jsx";
+
+const ProtectedRoute = ({ children }) => {
+  const user = localStorage.getItem("user");
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -38,22 +47,60 @@ const Home = () => {
     </main>
   );
 };
+
 const AppLayout = () => {
   const location = useLocation();
   const hideLayout = ["/login", "/signup"].includes(location.pathname);
+
   return (
     <Layout>
       {!hideLayout && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/welcome" element={<Welcome />} />
-        <Route path="/cam" element={<Cam />} />
-        <Route path="/layout" element={<LayoutPage />} />
-        <Route path="/customize" element={<Customize />} />
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/profile" element={<Profile />} />
+
+        <Route
+          path="/welcome"
+          element={
+            <ProtectedRoute>
+              <Welcome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cam"
+          element={
+            <ProtectedRoute>
+              <Cam />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/layout"
+          element={
+            <ProtectedRoute>
+              <LayoutPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customize"
+          element={
+            <ProtectedRoute>
+              <Customize />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Layout>
   );

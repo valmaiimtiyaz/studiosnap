@@ -15,15 +15,21 @@ export default function CustomizeStrip() {
   const stripRef = useRef(null);
   const API_BASE_URL = "https://studiosnap-backend.vercel.app";
 
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    type: "error",
+  });
+
   const presetColors = [
-    "#FFFFFF", // White
-    "#F5F5F4", // Light gray
-    "#000000", // Black
-    "#FEF3C7", // Cream
-    "#D1FAE5", // Mint
-    "#DBEAFE", // Light blue
-    "#FDE68A", // Yellow
-    "#E9D5FF", // Lavender
+    "#FFFFFF",
+    "#F5F5F4",
+    "#000000",
+    "#FEF3C7",
+    "#D1FAE5",
+    "#DBEAFE",
+    "#FDE68A",
+    "#E9D5FF",
   ];
 
   useEffect(() => {
@@ -35,14 +41,11 @@ export default function CustomizeStrip() {
         setLoading(false);
         return;
       }
-
       const parsed = JSON.parse(photosJson);
-
       if (!Array.isArray(parsed) || parsed.length === 0) {
         setLoading(false);
         return;
       }
-
       setLayoutId(lId);
       setPhotos(parsed);
       setLoading(false);
@@ -69,23 +72,24 @@ export default function CustomizeStrip() {
 
   const handleDownload = async () => {
     if (!stripRef.current) return;
-
     try {
       const html2canvas = (await import("html2canvas")).default;
-
       const canvas = await html2canvas(stripRef.current, {
         backgroundColor: frameColor,
         scale: 2,
         useCORS: true,
       });
-
       const link = document.createElement("a");
       link.download = "studio-snap-photostrip.png";
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (error) {
       console.error("Download error:", error);
-      alert("Failed to download. Please try again.");
+      setPopup({
+        show: true,
+        message: "Failed to download. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -97,7 +101,11 @@ export default function CustomizeStrip() {
 
   const handleFeedbackSubmit = async () => {
     if (rating === 0) {
-      alert("Please select a star rating!");
+      setPopup({
+        show: true,
+        message: "Please select a star rating first!",
+        type: "warning",
+      });
       return;
     }
     setIsSubmitting(true);
@@ -110,7 +118,11 @@ export default function CustomizeStrip() {
       });
       setFeedbackSent(true);
     } catch (error) {
-      alert("Failed to send feedback, but thanks anyway!");
+      setPopup({
+        show: true,
+        message: "Failed to send feedback, but thanks anyway!",
+        type: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -128,12 +140,32 @@ export default function CustomizeStrip() {
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-10 font-montserrat max-w-7xl mx-auto text-center">
+      {popup.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-[#FCF9E9] p-6 rounded-2xl shadow-2xl w-80 text-center border-2 border-[#610049] animate-bounce-in">
+            <h3
+              className={`text-2xl font-bold mb-2 ${
+                popup.type === "error" ? "text-red-600" : "text-yellow-600"
+              }`}
+            >
+              {popup.type === "error" ? "Oops!" : "Wait!"}
+            </h3>
+            <p className="text-[#610049] mb-6 font-medium">{popup.message}</p>
+            <button
+              onClick={() => setPopup({ ...popup, show: false })}
+              className="bg-[#610049] text-white px-6 py-2 rounded-full font-bold hover:bg-[#4a003a]"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-extrabold text-[#610049] tracking-tight sm:text-4xl mb-12 w-full text-center mt-10">
         Customize your photo strip !
       </h1>
 
       <main className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-12 px-4">
-        {/* Photo Strip Preview */}
         <div
           ref={stripRef}
           className="shadow-lg flex flex-col flex-shrink-0"
@@ -176,7 +208,6 @@ export default function CustomizeStrip() {
           ))}
         </div>
 
-        {/* Customization Panel */}
         <div className="flex flex-col items-center lg:items-start gap-6 w-full max-w-lg">
           <div className="w-full space-y-6">
             {/* COLOR PICKER & DOWNLOAD BOX */}
@@ -238,7 +269,6 @@ export default function CustomizeStrip() {
               </div>
             </div>
 
-            {/* FEEDBACK FORM */}
             <div className="bg-[#FCF9E9] rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8 w-full">
               {!feedbackSent ? (
                 <>
