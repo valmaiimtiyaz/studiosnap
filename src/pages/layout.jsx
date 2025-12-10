@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import layout1 from "../assets/Layout1.svg";
-import layout2 from "../assets/Layout2.svg";
-import layout3 from "../assets/Layout3.svg";
-import layout4 from "../assets/Layout4.svg";
+import layout1 from "../assets/Layout1.png";
+import layout2 from "../assets/Layout2.png";
+import layout3 from "../assets/Layout3.png";
+import layout4 from "../assets/Layout4.png";
 
 const Layout = () => {
   const [selectedLayout, setSelectedLayout] = useState(null);
